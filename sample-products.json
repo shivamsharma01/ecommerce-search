@@ -1,0 +1,10 @@
+{"index":{"_index":"products"}}
+{"name":"Wireless Bluetooth Headphones","description":"Premium noise-cancelling wireless headphones with 30-hour battery life","categories":["Electronics","Audio"],"brand":"SoundMax","price":89.99,"imageUrl":"/images/headphones.jpg","rating":4.5,"inStock":true,"attributes":{"color":"black","connectivity":"bluetooth"}}
+{"index":{"_index":"products"}}
+{"name":"Organic Cotton T-Shirt","description":"Comfortable 100% organic cotton t-shirt, perfect for everyday wear","categories":["Clothing","Men"],"brand":"EcoWear","price":24.99,"imageUrl":"/images/tshirt.jpg","rating":4.2,"inStock":true,"attributes":{"color":"blue","size":"M"}}
+{"index":{"_index":"products"}}
+{"name":"Stainless Steel Water Bottle","description":"Insulated 32oz water bottle keeps drinks cold for 24 hours","categories":["Kitchen","Outdoor"],"brand":"HydroLife","price":34.99,"imageUrl":"/images/bottle.jpg","rating":4.8,"inStock":true,"attributes":{"capacity":"32oz","material":"stainless steel"}}
+{"index":{"_index":"products"}}
+{"name":"Wireless Gaming Mouse","description":"High-precision gaming mouse with RGB lighting and programmable buttons","categories":["Electronics","Gaming"],"brand":"TechGear","price":59.99,"imageUrl":"/images/mouse.jpg","rating":4.6,"inStock":true,"attributes":{"dpi":"16000","connectivity":"wireless"}}
+{"index":{"_index":"products"}}
+{"name":"Running Shoes","description":"Lightweight running shoes with cushioned sole for marathon training","categories":["Footwear","Sports"],"brand":"RunFast","price":129.99,"imageUrl":"/images/shoes.jpg","rating":4.4,"inStock":false,"attributes":{"color":"white","size":"10"}}
