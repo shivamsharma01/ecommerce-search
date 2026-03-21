@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: search
+  elasticsearch:
+    # Configure for your environment
+    uris: http://localhost:9200
+
+server:
+  port: 8083
