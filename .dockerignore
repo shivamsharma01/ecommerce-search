@@ -1,0 +1,16 @@
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+build
+.gradle
+out
+**/build
+**/.gradle
+**/out
+*.log
+.DS_Store
+k8s
+README.md
+cloudbuild.yaml

@@ -118,3 +118,18 @@ curl -s -X POST http://localhost:8083/api/search \
 ./gradlew build
 ```
 
+## Container & Kubernetes
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Multi-stage JDK 17 build, JRE runtime, layered JAR, non-root user, port **8083** |
+| `.dockerignore` | Keeps build context small |
+| `k8s/deployment.yaml` | Deployment (2 replicas, rolling update, probes on **`/health`**, resources, ConfigMap + Service) |
+| `cloudbuild.yaml` | Artifact Registry image `${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_SERVICE_NAME}:$COMMIT_SHA` + optional GKE rollout |
+
+**Local image:** `docker build -t search:local .` then `docker run --rm -p 8083:8083 -e SPRING_ELASTICSEARCH_URIS=http://host.docker.internal:9200 search:local`
+
+**Apply manifests:** Replace `<ARTIFACT_REGISTRY_URL>` and `<VERSION>` in `k8s/deployment.yaml`, then `kubectl apply -f k8s/deployment.yaml`.
+
+**Cloud Build:** Set `_REGION`, `_PROJECT_ID`, `_REPO`, `_SERVICE_NAME` (default `search`), and GKE `_GKE_CLUSTER` / `_GKE_LOCATION` for rollout. Use `_SKIP_DEPLOY=true` for build-push only.
+

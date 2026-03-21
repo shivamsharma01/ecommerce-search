@@ -1,0 +1,95 @@
+# Google Cloud Build — Docker build → Artifact Registry → kubectl set image + rollout.
+#
+# Image:
+#   ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_SERVICE_NAME}:${COMMIT_SHA|SHORT_SHA|BUILD_ID}
+#
+# Built-in substitution: PROJECT_ID (build’s GCP project). COMMIT_SHA / SHORT_SHA when triggered from a connected repo.
+#
+# IAM (Cloud Build default SA: PROJECT_NUMBER@cloudbuild.gserviceaccount.com):
+#   - roles/artifactregistry.writer
+#   - roles/container.developer (for GKE rollout)
+#
+# Example (substitutions required for your project):
+#   gcloud builds submit --config=cloudbuild.yaml \
+#     --substitutions=_REGION=us-central1,_PROJECT_ID=my-proj,_REPO=mcart,_SERVICE_NAME=search,_GKE_CLUSTER=my-cluster,_GKE_LOCATION=us-central1
+#
+# Build-only: _SKIP_DEPLOY=true
+
+timeout: 1200s
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+substitutions:
+  _REGION: us-central1
+  _PROJECT_ID: your-gcp-project
+  _REPO: mcart
+  _SERVICE_NAME: search
+  _GKE_CLUSTER: your-gke-cluster
+  _GKE_LOCATION: us-central1
+  _K8S_NAMESPACE: default
+  _SKIP_DEPLOY: "false"
+
+steps:
+  - id: build-and-push
+    name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        TAG="$${COMMIT_SHA:-}"
+        if [[ -z "$${TAG}" ]]; then TAG="$${SHORT_SHA:-}"; fi
+        if [[ -z "$${TAG}" ]]; then TAG="$${BUILD_ID}"; fi
+
+        REGISTRY_HOST="${_REGION}-docker.pkg.dev"
+        IMAGE="$${REGISTRY_HOST}/${_PROJECT_ID}/${_REPO}/${_SERVICE_NAME}:$${TAG}"
+        CACHE_IMAGE="$${REGISTRY_HOST}/${_PROJECT_ID}/${_REPO}/${_SERVICE_NAME}:buildcache"
+
+        docker pull "$${CACHE_IMAGE}" || true
+
+        docker build \
+          --cache-from "$${CACHE_IMAGE}" \
+          -f Dockerfile \
+          -t "$${IMAGE}" \
+          -t "$${CACHE_IMAGE}" \
+          -t "$${REGISTRY_HOST}/${_PROJECT_ID}/${_REPO}/${_SERVICE_NAME}:latest" \
+          .
+
+        docker push "$${IMAGE}"
+        docker push "$${CACHE_IMAGE}"
+        docker push "$${REGISTRY_HOST}/${_PROJECT_ID}/${_REPO}/${_SERVICE_NAME}:latest"
+
+        printf '%s' "$${IMAGE}" > /workspace/image_ref
+
+  - id: kubectl-set-image
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ "${_SKIP_DEPLOY}" == "true" ]]; then
+          echo "Skipping deploy (_SKIP_DEPLOY=true)"
+          exit 0
+        fi
+
+        gcloud config set project "${_PROJECT_ID}"
+        gcloud container clusters get-credentials "${_GKE_CLUSTER}" \
+          --region "${_GKE_LOCATION}" \
+          --project "${_PROJECT_ID}"
+
+        IMAGE="$$(cat /workspace/image_ref)"
+        kubectl set image "deployment/${_SERVICE_NAME}" \
+          "${_SERVICE_NAME}=$${IMAGE}" \
+          --namespace="${_K8S_NAMESPACE}" \
+          --record
+        kubectl rollout status "deployment/${_SERVICE_NAME}" \
+          --namespace="${_K8S_NAMESPACE}" \
+          --timeout=300s
+
+    waitFor:
+      - build-and-push
