@@ -6,6 +6,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +24,9 @@ public class Product {
     @Id
     private String id;
 
-    @Field(type = FieldType.Text, analyzer = "standard")
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "standard"),
+            otherFields = @InnerField(suffix = "sort", type = FieldType.Keyword))
     private String name;
 
     @Field(type = FieldType.Text, analyzer = "standard")
@@ -46,7 +50,7 @@ public class Product {
     @Field(type = FieldType.Boolean)
     private boolean inStock;
 
-    @Field(type = FieldType.Object, enabled = false)
+    @Field(type = FieldType.Object)
     private Map<String, Object> attributes;
 
     @Field(type = FieldType.Long)
