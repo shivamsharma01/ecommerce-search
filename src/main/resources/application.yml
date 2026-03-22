@@ -2,11 +2,15 @@ spring:
   application:
     name: search
   elasticsearch:
-    # Configure for your environment
-    uris: http://localhost:9200
+    uris: ${SPRING_ELASTICSEARCH_URIS:http://localhost:9200}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8081}
 
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 management:
   endpoints:
@@ -22,20 +26,6 @@ management:
         enabled: true
       show-details: never
 
-# When app.security.enabled=true, configure JWT (same as user service), e.g.:
-# spring:
-#   security:
-#     oauth2:
-#       resourceserver:
-#         jwt:
-#           issuer-uri: ${AUTH_ISSUER_URI:https://auth.example.com}
-# Or set SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI in the environment.
-
 app:
   security:
-    # Match product service: false for local/tests; true in deployed env with JWT issuer configured
     enabled: ${APP_SECURITY_ENABLED:false}
-    # cors-allowed-origins:
-    #   - https://your-frontend.example
-    # Optional: require OAuth2 scope for POST /api/search (e.g. search.query)
-    # required-scope: search.query
