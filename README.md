@@ -50,4 +50,4 @@ docker run --rm -p 8083:8083 \
   search:local
 ```
 
-Kubernetes: **`ecomm-infra/deploy/k8s/apps/search/`** — set `<ARTIFACT_REGISTRY_URL>` and `<VERSION>` before apply (or `kubectl set image`).
+Kubernetes: **`ecomm-infra/deploy/k8s/apps/search/`** — image URI pattern **`asia-south2-docker.pkg.dev/ecommerce-491019/docker-apps/search:<short-sha>`** (Cloud Build). See **`ecomm-infra/README.md`**.
