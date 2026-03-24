@@ -59,6 +59,7 @@ public class SecurityConfig {
                 auth.requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll();
                 auth.requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll();
                 auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/webjars/swagger-ui/**").permitAll();
+                auth.requestMatchers(HttpMethod.POST, "/api/search").permitAll();
 
                 String scope = securityProperties.getRequiredScope();
                 if (StringUtils.hasText(scope)) {
