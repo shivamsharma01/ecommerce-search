@@ -21,7 +21,7 @@ public class ProductSearchResult {
     private List<String> categories;
     private String brand;
     private Double price;
-    private List<String> imageUrls;
+    private List<ProductGalleryImageResult> gallery;
     private Double rating;
     private boolean inStock;
     private Map<String, Object> attributes;
