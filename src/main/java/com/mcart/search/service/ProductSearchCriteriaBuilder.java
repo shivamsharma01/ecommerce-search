@@ -12,9 +12,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProductSearchCriteriaBuilder {
 
+    /**
+     * The UI sends {@code *} when the user leaves the search box empty so {@link com.mcart.search.dto.SearchRequest}
+     * stays {@code @NotBlank}. A text {@code match} on {@code *} does not behave like SQL wildcard and matches
+     * nothing, which breaks filter-only searches (e.g. price range only).
+     */
     public Criteria buildCriteria(SearchRequest request) {
-        Criteria searchCriteria = Criteria.where("name").matches(request.getSearchTerm())
-                .or(Criteria.where("description").matches(request.getSearchTerm()));
+        String term = request.getSearchTerm() != null ? request.getSearchTerm().trim() : "";
+
+        Criteria searchCriteria;
+        if (isMatchAllSearchTerm(term)) {
+            searchCriteria = Criteria.where("name").exists();
+        } else {
+            searchCriteria = Criteria.where("name").matches(term)
+                    .or(Criteria.where("description").matches(term));
+        }
 
         SearchFilters filters = request.getFilters();
         if (filters != null && filters.hasFilters()) {
@@ -97,5 +109,9 @@ public class ProductSearchCriteriaBuilder {
         }
 
         return combined;
+    }
+
+    private static boolean isMatchAllSearchTerm(String term) {
+        return term.isEmpty() || "*".equals(term);
     }
 }
