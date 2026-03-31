@@ -1,19 +1,21 @@
 # Search service
 
-HTTP API over **Elasticsearch** for the shared **`products`** index (written by product-indexer). Optional JWT on `POST /api/search` when `APP_SECURITY_ENABLED=true`.
+HTTP API over **OpenSearch** (Elasticsearch-compatible REST API) for the shared **`products`** index (written by product-indexer). Optional JWT on `POST /api/search` when `APP_SECURITY_ENABLED=true`.
 
 ## Requirements
 
-- Java 17
-- Elasticsearch **9.x** (aligned with Spring Boot 4 stack in this module)
+- Java 21
+- OpenSearch **2.x / 3.x**
 
-## Run Elasticsearch locally
+## Run OpenSearch locally
 
 ```bash
-docker run -d --name elasticsearch -p 9200:9200 \
-  -e "discovery.type=single-node" -e "xpack.security.enabled=false" \
-  -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
-  elasticsearch:9.2.5
+docker run -d --name opensearch-local \
+  -p 9200:9200 -p 9600:9600 \
+  -e discovery.type=single-node \
+  -e DISABLE_SECURITY_PLUGIN=true \
+  -e OPENSEARCH_JAVA_OPTS="-Xms512m -Xmx512m" \
+  opensearchproject/opensearch:2.19.2
 ```
 
 ## Run the app
@@ -25,7 +27,7 @@ docker run -d --name elasticsearch -p 9200:9200 \
 | Variable | Purpose |
 |----------|---------|
 | `SERVER_PORT` | Default `8083` |
-| `SPRING_ELASTICSEARCH_URIS` | ES URL(s) |
+| `OPENSEARCH_URIS` | OpenSearch URL(s) |
 | `APP_SECURITY_ENABLED` | `true` to require Bearer JWT |
 | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` | Issuer when security is on |
 
@@ -46,7 +48,7 @@ Tests are a light Spring context load (no Elasticsearch container).
 ```bash
 docker build -t search:local .
 docker run --rm -p 8083:8083 \
-  -e SPRING_ELASTICSEARCH_URIS=http://host.docker.internal:9200 \
+  -e OPENSEARCH_URIS=http://host.docker.internal:9200 \
   search:local
 ```
 
