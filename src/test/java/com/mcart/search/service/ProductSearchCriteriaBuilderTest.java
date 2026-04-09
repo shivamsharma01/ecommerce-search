@@ -29,4 +29,5 @@ class ProductSearchCriteriaBuilderTest {
         Criteria criteria = builder.buildCriteria(req);
         assertThat(criteria.toString()).containsIgnoringCase("kurta");
     }
+
 }

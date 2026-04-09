@@ -3,8 +3,14 @@ package com.mcart.search.service;
 import com.mcart.search.dto.SearchFilters;
 import com.mcart.search.dto.SearchRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.Field;
+import org.springframework.data.elasticsearch.core.query.SimpleField;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Builds Elasticsearch {@link Criteria} and {@link Sort} for product search from a {@link SearchRequest}.
@@ -64,13 +70,17 @@ public class ProductSearchCriteriaBuilder {
     private Criteria applyFilters(SearchFilters filters) {
         Criteria combined = null;
 
-        if (filters.getCategories() != null && !filters.getCategories().isEmpty()) {
-            Criteria cat = Criteria.where("categories").in(filters.getCategories());
+        List<String> categories = trimmedNonEmpty(filters.getCategories());
+        if (!categories.isEmpty()) {
+            // Criteria.where(String) leaves FieldType unset; IN then uses query_string, which does not match our
+            // keyword-only "categories" mapping. Mark Keyword so the client emits a terms query.
+            Criteria cat = Criteria.where(keywordField("categories")).in(categories);
             combined = combined == null ? cat : combined.and(cat);
         }
 
-        if (filters.getBrands() != null && !filters.getBrands().isEmpty()) {
-            Criteria brand = Criteria.where("brand").in(filters.getBrands());
+        List<String> brands = trimmedNonEmpty(filters.getBrands());
+        if (!brands.isEmpty()) {
+            Criteria brand = Criteria.where(keywordField("brand")).in(brands);
             combined = combined == null ? brand : combined.and(brand);
         }
 
@@ -92,6 +102,7 @@ public class ProductSearchCriteriaBuilder {
         }
 
         if (filters.getMinRating() != null) {
+            // Range on "rating" excludes documents with no rating field (typical until products have ratings indexed).
             Criteria rating = Criteria.where("rating").greaterThanEqual(filters.getMinRating());
             combined = combined == null ? rating : combined.and(rating);
         }
@@ -113,5 +124,21 @@ public class ProductSearchCriteriaBuilder {
 
     private static boolean isMatchAllSearchTerm(String term) {
         return term.isEmpty() || "*".equals(term);
+    }
+
+    private static Field keywordField(String name) {
+        SimpleField f = new SimpleField(name);
+        f.setFieldType(FieldType.Keyword);
+        return f;
+    }
+
+    private static List<String> trimmedNonEmpty(List<String> raw) {
+        if (raw == null || raw.isEmpty()) {
+            return List.of();
+        }
+        return raw.stream()
+                .flatMap(s -> s == null ? Stream.empty() : Stream.of(s.trim()))
+                .filter(s -> !s.isEmpty())
+                .toList();
     }
 }
