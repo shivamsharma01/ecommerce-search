@@ -36,10 +36,11 @@ public class ProductSearchCriteriaBuilder {
 
         SearchFilters filters = request.getFilters();
         if (filters != null && filters.hasFilters()) {
-            Criteria filterCriteria = applyFilters(filters);
-            if (filterCriteria != null) {
-                searchCriteria = searchCriteria.and(filterCriteria);
-            }
+            // Each filter must be searchCriteria.and(criterion), not criterion.and(other): Spring's
+            // CriteriaQueryProcessor only builds query fragments for the top-level criteriaChain entries.
+            // Nesting (e.g. categories.and(brand)) leaves brand/rating/price on the inner chain — they are never
+            // translated to the OpenSearch query, so filters appear ignored or wrongly OR-like.
+            searchCriteria = appendFiltersAsSiblings(searchCriteria, filters);
         }
 
         return searchCriteria;
@@ -67,44 +68,38 @@ public class ProductSearchCriteriaBuilder {
         return s == null ? "" : s.trim();
     }
 
-    private Criteria applyFilters(SearchFilters filters) {
-        Criteria combined = null;
+    /**
+     * AND each filter onto {@code base} as its own top-level chain entry so OpenSearch sees every clause.
+     */
+    private Criteria appendFiltersAsSiblings(Criteria base, SearchFilters filters) {
+        Criteria sc = base;
 
         List<String> categories = trimmedNonEmpty(filters.getCategories());
         if (!categories.isEmpty()) {
-            // Criteria.where(String) leaves FieldType unset; IN then uses query_string, which does not match our
-            // keyword-only "categories" mapping. Mark Keyword so the client emits a terms query.
-            Criteria cat = Criteria.where(keywordField("categories")).in(categories);
-            combined = combined == null ? cat : combined.and(cat);
+            sc = sc.and(Criteria.where(keywordField("categories")).in(categories));
         }
 
         List<String> brands = trimmedNonEmpty(filters.getBrands());
         if (!brands.isEmpty()) {
-            Criteria brand = Criteria.where(keywordField("brand")).in(brands);
-            combined = combined == null ? brand : combined.and(brand);
+            sc = sc.and(Criteria.where(keywordField("brand")).in(brands));
         }
 
         if (filters.getMinPrice() != null || filters.getMaxPrice() != null) {
-            Criteria price;
             if (filters.getMinPrice() != null && filters.getMaxPrice() != null) {
-                price = Criteria.where("price").between(filters.getMinPrice(), filters.getMaxPrice());
+                sc = sc.and(Criteria.where("price").between(filters.getMinPrice(), filters.getMaxPrice()));
             } else if (filters.getMinPrice() != null) {
-                price = Criteria.where("price").greaterThanEqual(filters.getMinPrice());
+                sc = sc.and(Criteria.where("price").greaterThanEqual(filters.getMinPrice()));
             } else {
-                price = Criteria.where("price").lessThanEqual(filters.getMaxPrice());
+                sc = sc.and(Criteria.where("price").lessThanEqual(filters.getMaxPrice()));
             }
-            combined = combined == null ? price : combined.and(price);
         }
 
         if (filters.getInStock() != null) {
-            Criteria stock = Criteria.where("inStock").is(filters.getInStock());
-            combined = combined == null ? stock : combined.and(stock);
+            sc = sc.and(Criteria.where("inStock").is(filters.getInStock()));
         }
 
         if (filters.getMinRating() != null) {
-            // Range on "rating" excludes documents with no rating field (typical until products have ratings indexed).
-            Criteria rating = Criteria.where("rating").greaterThanEqual(filters.getMinRating());
-            combined = combined == null ? rating : combined.and(rating);
+            sc = sc.and(Criteria.where("rating").greaterThanEqual(filters.getMinRating()));
         }
 
         if (filters.getAttributes() != null && !filters.getAttributes().isEmpty()) {
@@ -113,13 +108,12 @@ public class ProductSearchCriteriaBuilder {
                 if (parts.length == 2) {
                     String key = "attributes." + parts[0].trim();
                     String value = parts[1].trim();
-                    Criteria attrCriteria = Criteria.where(key).is(value);
-                    combined = combined == null ? attrCriteria : combined.and(attrCriteria);
+                    sc = sc.and(Criteria.where(key).is(value));
                 }
             }
         }
 
-        return combined;
+        return sc;
     }
 
     private static boolean isMatchAllSearchTerm(String term) {
