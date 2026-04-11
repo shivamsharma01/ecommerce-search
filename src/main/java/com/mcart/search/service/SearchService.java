@@ -6,6 +6,7 @@ import com.mcart.search.dto.SearchResponse;
 import com.mcart.search.mapper.ProductMapper;
 import com.mcart.search.model.Product;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -19,6 +20,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SearchService {
 
     private final ElasticsearchOperations elasticsearchOperations;
@@ -36,9 +38,11 @@ public class SearchService {
                 .map(hit -> productMapper.toProductSearchResult(hit.getContent()))
                 .toList();
 
+        long total = searchHits.getTotalHits();
+        log.debug("Search page={} size={} totalHits={} returned={}", request.getPage(), request.getSize(), total, results.size());
         return new SearchResponse(
                 results,
-                searchHits.getTotalHits(),
+                total,
                 request.getPage(),
                 request.getSize()
         );
