@@ -5,10 +5,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * Response DTO for search operations.
- * Contains the search results and pagination metadata.
- */
 @Data
 @NoArgsConstructor
 public class SearchResponse {
@@ -27,9 +23,6 @@ public class SearchResponse {
         this.totalPages = computeTotalPages(totalHits, size);
     }
 
-    /**
-     * Ceiling of {@code totalHits / size} without floating-point precision loss; caps at {@link Integer#MAX_VALUE}.
-     */
     public static int computeTotalPages(long totalHits, int size) {
         if (size <= 0 || totalHits <= 0) {
             return 0;

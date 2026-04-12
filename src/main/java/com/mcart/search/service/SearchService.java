@@ -15,9 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * Runs product search against Elasticsearch and maps hits to API DTOs.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j

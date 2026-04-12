@@ -5,9 +5,6 @@ import com.mcart.search.model.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 
-/**
- * MapStruct mapper for converting Product entities to ProductSearchResult DTOs.
- */
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ProductMapper {
 

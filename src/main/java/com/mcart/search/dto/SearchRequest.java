@@ -10,10 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Request DTO for search operations from the e-commerce UI.
- * Contains the search term and optional filters.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

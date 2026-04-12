@@ -11,9 +11,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
-/**
- * JSON 403 responses (servlet), aligned with product service error shape.
- */
 @Component
 public class JsonAccessDeniedHandler implements AccessDeniedHandler {
 

@@ -12,17 +12,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Builds Elasticsearch {@link Criteria} and {@link Sort} for product search from a {@link SearchRequest}.
- */
 @Component
 public class ProductSearchCriteriaBuilder {
 
-    /**
-     * The UI sends {@code *} when the user leaves the search box empty so {@link com.mcart.search.dto.SearchRequest}
-     * stays {@code @NotBlank}. A text {@code match} on {@code *} does not behave like SQL wildcard and matches
-     * nothing, which breaks filter-only searches (e.g. price range only).
-     */
     public Criteria buildCriteria(SearchRequest request) {
         String term = request.getSearchTerm() != null ? request.getSearchTerm().trim() : "";
 
@@ -36,19 +28,12 @@ public class ProductSearchCriteriaBuilder {
 
         SearchFilters filters = request.getFilters();
         if (filters != null && filters.hasFilters()) {
-            // Each filter must be searchCriteria.and(criterion), not criterion.and(other): Spring's
-            // CriteriaQueryProcessor only builds query fragments for the top-level criteriaChain entries.
-            // Nesting (e.g. categories.and(brand)) leaves brand/rating/price on the inner chain — they are never
-            // translated to the OpenSearch query, so filters appear ignored or wrongly OR-like.
             searchCriteria = appendFiltersAsSiblings(searchCriteria, filters);
         }
 
         return searchCriteria;
     }
 
-    /**
-     * Maps API sort fields to index fields. {@code name} uses the {@code name.sort} keyword subfield.
-     */
     public Sort buildSort(SearchRequest request) {
         String by = request.getSortBy() != null ? request.getSortBy().trim().toLowerCase() : "relevance";
         Sort.Direction direction = "asc".equalsIgnoreCase(trimToEmpty(request.getSortOrder()))
@@ -68,9 +53,6 @@ public class ProductSearchCriteriaBuilder {
         return s == null ? "" : s.trim();
     }
 
-    /**
-     * AND each filter onto {@code base} as its own top-level chain entry so OpenSearch sees every clause.
-     */
     private Criteria appendFiltersAsSiblings(Criteria base, SearchFilters filters) {
         Criteria sc = base;
 

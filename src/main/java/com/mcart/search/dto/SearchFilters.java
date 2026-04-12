@@ -9,10 +9,6 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * Filters to be applied to the search query.
- * Supports common e-commerce filter criteria.
- */
 @Data
 @NoArgsConstructor
 public class SearchFilters {

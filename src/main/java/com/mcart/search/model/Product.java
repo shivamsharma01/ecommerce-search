@@ -12,10 +12,6 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Product document model for Elasticsearch.
- * Maps to the products index used by the e-commerce application.
- */
 @Data
 @NoArgsConstructor
 @Document(indexName = "products")

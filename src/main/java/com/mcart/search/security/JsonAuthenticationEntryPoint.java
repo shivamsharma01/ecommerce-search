@@ -11,9 +11,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
-/**
- * JSON 401 responses (servlet), aligned with product service error shape.
- */
 @Component
 public class JsonAuthenticationEntryPoint implements AuthenticationEntryPoint {
 

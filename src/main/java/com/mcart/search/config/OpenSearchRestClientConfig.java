@@ -7,11 +7,6 @@ import org.opensearch.spring.boot.autoconfigure.RestClientBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * OpenSearch uses a pooled async HTTP client. After idle time, OpenSearch or kube-proxy may close
- * the TCP connection; the next request can then fail with "Connection closed by peer". Evicting
- * idle connections aggressively avoids handing out dead sockets.
- */
 @Configuration
 public class OpenSearchRestClientConfig {
 

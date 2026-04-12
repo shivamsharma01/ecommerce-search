@@ -7,10 +7,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Product result returned from search.
- * Field names align with the Elasticsearch {@code products} document (same as product-indexer writes).
- */
 @Data
 @NoArgsConstructor
 public class ProductSearchResult {
